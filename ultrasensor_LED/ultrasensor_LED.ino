@@ -11,17 +11,18 @@
 // ---------------------------------------------------------------------------
 #include <NewPing.h>
 
-#define SONAR_NUM     1 // Number or sensors.
+#define SONAR_NUM     2 // Number or sensors.
 #define MAX_DISTANCE 200 // Maximum distance (in cm) to ping.
 #define PING_INTERVAL 33 // Milliseconds between sensor pings (29ms is about the min to avoid cross-sensor echo).
-#define YELLOW 9
-#define RED 6
+#define YELLOW 10
+#define RED 11
 unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
 unsigned int cm[SONAR_NUM];         // Where the ping distances are stored.
 uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
 
 NewPing sonar[SONAR_NUM] = {     // Sensor object array.
   NewPing(13, 12, MAX_DISTANCE), // Each sensor's trigger pin, echo pin, and max distance to ping.
+  NewPing(5,4,MAX_DISTANCE),
 };
 
 void setup() {
@@ -39,41 +40,21 @@ void loop() {
   for (uint8_t i = 0; i < SONAR_NUM; i++) { // Loop through all the sensors.
     if (millis() >= pingTimer[i]) {         // Is it this sensor's time to ping?
       pingTimer[i] += PING_INTERVAL * SONAR_NUM;  // Set next time this sensor will be pinged.
-      if (i == 0 && currentSensor == SONAR_NUM - 1) oneSensorCycle(); // Sensor ping cycle complete, do something with the results.
+     if (i == 0 && currentSensor == SONAR_NUM - 1) oneSensorCycle(); // Sensor ping cycle complete, do something with the results.
       sonar[currentSensor].timer_stop();          // Make sure previous timer is canceled before starting a new ping (insurance).
       currentSensor = i;                          // Sensor being accessed.
      // cm[currentSensor] = 0;                      // Make distance zero in case there's no ping echo for this sensor.
       sonar[currentSensor].ping_timer(echoCheck); // Do the ping (processing continues, interrupt will call echoCheck to look for echo).
     }
   }
-  int a;
+  int a,b;
   // The rest of your code would go here.
   a= cm[0];
-if((a < 20) && (a > 5))
-{
-//  digitalWrite(7, HIGH);
-  analogWrite(RED, 255-(a*10));
-  analogWrite(YELLOW, a*10);
-}
-else if (a < 5)
-{
-  analogWrite(YELLOW, a);
-  analogWrite(RED, 255);
-}
-else
-{
-  analogWrite(YELLOW, 255);
-  analogWrite(RED,0);
-}
-//if (cm[0] <= 5)
-//{  
-//  analogWrite(YELLOW, cm[0]);
-//  analogWrite(RED, cm[0]);
-//}
-    
-//else{ digitalWrite(7, LOW); digitalWrite(2, LOW);}
-}
+  b=cm[1];
+if(a < 10) { digitalWrite(YELLOW, HIGH);} else { digitalWrite(YELLOW, LOW);}
+if(b < 10) { digitalWrite(RED, HIGH);} else digitalWrite(RED, LOW);
 
+}
 void echoCheck() { // If ping received, set the sensor distance to array.
   if (sonar[currentSensor].check_timer())
     cm[currentSensor] = sonar[currentSensor].ping_result / US_ROUNDTRIP_CM;
